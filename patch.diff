@@ -1,0 +1,59 @@
+diff --git a/st2debug/st2debug/cmd/submit_debug_info.py b/st2debug/st2debug/cmd/submit_debug_info.py
+index b0df4af75..a18f0c2c3 100644
+--- a/st2debug/st2debug/cmd/submit_debug_info.py
++++ b/st2debug/st2debug/cmd/submit_debug_info.py
+@@ -522,11 +522,12 @@ class DebugInfoCollector(object):
+
+         if cpu_info:
+             core_count = len(cpu_info)
+-            model = cpu_info[0]['model_name']
+-            system_information['hardware']['cpu'] = {
+-                'core_count': core_count,
+-                'model_name': model
+-            }
++            if(platform.processor() != "s390x"):
++                model = cpu_info[0]['model_name']
++                system_information['hardware']['cpu'] = {
++                    'core_count': core_count,
++                    'model_name': model
++                }
+         else:
+             # Unsupported platform
+             system_information['hardware']['cpu'] = 'unsupported platform'
+diff --git a/st2debug/st2debug/utils/system_info.py b/st2debug/st2debug/utils/system_info.py
+index 485c8ae0d..4d8c2e233 100644
+--- a/st2debug/st2debug/utils/system_info.py
++++ b/st2debug/st2debug/utils/system_info.py
+@@ -14,6 +14,7 @@
+ # limitations under the License.
+
+ import re
++import platform
+
+ from st2common.util.shell import run_command
+ from st2common.util.shell import quote_unix
+@@ -46,7 +47,10 @@ def get_cpu_info():
+     lines = content.split('\n')
+
+     result = []
+-    item = None
++    if(platform.processor() == "s390x"):
++        item = {}
++    else:
++        item = None
+     lines_count = len(lines)
+     for index, line in enumerate(lines):
+         line = line.strip()
+@@ -64,9 +68,10 @@ def get_cpu_info():
+         name = split[0].replace('\t', '').strip().replace(' ', '_')
+         value = split[1].replace('\t', '').strip()
+
+-        if name == 'processor':
+-            # Info about new core / CPU
+-            item = {}
++        if(platform.processor() != "s390x"):
++            if name == 'processor':
++                # Info about new core / CPU
++                item = {}
+
+         item[name] = value
